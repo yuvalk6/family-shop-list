@@ -2,7 +2,7 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover"/>
   <title>🛒 רשימת קניות</title>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -18,7 +18,9 @@
       --r:18px;--r-sm:11px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    html,body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);min-height:100svh;direction:rtl;-webkit-tap-highlight-color:transparent;}
+    html,body{font-family:'Heebo',sans-serif;background:var(--bg);color:var(--text);height:100%;overflow:hidden;direction:rtl;-webkit-tap-highlight-color:transparent;}
+    #app{height:100%;display:flex;flex-direction:column;overflow:hidden;}
+    #screens-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
     button{font-family:'Heebo',sans-serif;cursor:pointer;}
 
     /* ── LOADING ── */
@@ -28,7 +30,7 @@
     @keyframes spin{to{transform:rotate(360deg);}}
 
     /* ── HEADER ── */
-    #app-header{position:sticky;top:0;z-index:100;height:62px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1C6043 0%,#28855C 100%);box-shadow:0 2px 20px rgba(28,96,67,.4);}
+    #app-header{height:62px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1C6043 0%,#28855C 100%);box-shadow:0 2px 20px rgba(28,96,67,.4);flex-shrink:0;}
     .h-left{display:flex;align-items:center;gap:10px;}
     .h-logo{font-size:1.45rem;}
     .h-title{font-size:1.15rem;font-weight:900;color:#fff;letter-spacing:-.4px;}
@@ -43,7 +45,7 @@
     .settings-btn:hover{background:rgba(255,255,255,.26);}
 
     /* ── BOTTOM NAV ── */
-    #bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:100;height:66px;background:var(--card);border-top:1.5px solid var(--border);display:flex;box-shadow:0 -4px 24px rgba(0,0,0,.08);}
+    #bottom-nav{height:66px;background:var(--card);border-top:1.5px solid var(--border);display:flex;box-shadow:0 -4px 24px rgba(0,0,0,.08);flex-shrink:0;}
     .nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:transparent;font-family:'Heebo',sans-serif;color:var(--light);transition:color .18s;position:relative;}
     .nav-tab .ni{font-size:1.25rem;transition:transform .2s;}
     .nav-tab .nl{font-size:.65rem;font-weight:700;}
@@ -52,8 +54,7 @@
     .nav-tab.active::after{content:'';position:absolute;top:0;left:20%;right:20%;height:3px;background:var(--primary);border-radius:0 0 4px 4px;}
     .nav-badge{position:absolute;top:8px;right:calc(50% - 20px);min-width:17px;height:17px;background:var(--accent);color:#fff;border-radius:99px;font-size:.62rem;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;}
 
-    /* ── SCREENS ── */
-    .screen{display:none;padding-bottom:82px;}
+    .screen{display:none;padding-bottom:16px;}
     .screen.active{display:block;}
 
     /* ── BUTTONS ── */
@@ -86,7 +87,7 @@
     .check-box.partial::after{content:'−';color:#fff;font-size:.82rem;font-weight:900;}
 
     /* ── SEARCH BAR ── */
-    .manage-sticky{position:sticky;top:62px;z-index:50;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+    .manage-sticky{position:sticky;top:0;z-index:50;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.06);}
     .toolbar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--card);border-bottom:1px solid var(--border);}
     .search-bar-wrap{padding:8px 16px 6px;background:var(--card);border-bottom:1px solid var(--border);}
     .search-inner{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:8px 14px;transition:border-color .2s;}
@@ -197,7 +198,7 @@
     .empty-cart .ec-sub{font-size:.88rem;color:var(--muted);line-height:1.6;}
 
     /* ── CART SCREEN ── */
-    .cart-header-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:62px;z-index:50;}
+    .cart-header-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
     .cart-stats{font-size:.88rem;color:var(--muted);}
     .cart-stats strong{color:var(--text);font-size:.95rem;font-weight:800;}
     .cart-item-row{display:flex;align-items:flex-start;gap:9px;padding:10px 14px;border-bottom:1px solid #EDE8E0;transition:background .13s;}
@@ -218,7 +219,7 @@
     .lists-toolbar{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:62px;z-index:50;}
     .lists-toolbar h2{font-size:.95rem;font-weight:800;color:var(--text);flex:1;}
     /* inner tabs */
-    .inner-tabs{display:flex;gap:0;background:var(--card);border-bottom:1.5px solid var(--border);position:sticky;top:62px;z-index:49;}
+    .inner-tabs{display:flex;gap:0;background:var(--card);border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:49;}
     .inner-tab{flex:1;padding:11px;text-align:center;font-size:.84rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;background:transparent;border-top:none;border-left:none;border-right:none;font-family:'Heebo',sans-serif;}
     .inner-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
     .inner-pane{display:none;}.inner-pane.active{display:block;}
@@ -391,7 +392,7 @@
     </div>
   </header>
 
-  <!-- SCREEN 1: MANAGE -->
+  <div id="screens-wrap">
   <div id="screen-manage" class="screen active">
     <div class="manage-sticky">
       <div class="toolbar">
@@ -399,8 +400,7 @@
           <div class="check-box" id="global-check-box"></div>
           <span style="font-size:.82rem;font-weight:700;color:var(--muted);">בחר הכל</span>
         </div>
-        <button class="btn btn-secondary btn-sm" onclick="collapseAll('manage')" title="כווץ הכל">⊖ כווץ</button>
-        <button class="btn btn-secondary btn-sm" onclick="expandAll('manage')"   title="הרחב הכל">⊕ הרחב</button>
+        <button class="btn btn-secondary btn-sm" id="btn-collapse-toggle" onclick="toggleCollapseAll('manage')">⊖ כווץ הכל</button>
         <div style="flex:1;"></div>
         <button class="btn btn-success btn-sm" id="btn-share-manage">📤 שתף</button>
         <button class="btn btn-secondary btn-sm" id="btn-uncheck-all">☐ נקה</button>
@@ -431,8 +431,7 @@
         &nbsp;·&nbsp;<span id="cart-done-count">0</span><span> נרכשו ✓</span>
       </div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-secondary btn-sm" onclick="collapseAll('cart')" title="כווץ הכל">⊖</button>
-        <button class="btn btn-secondary btn-sm" onclick="expandAll('cart')"   title="הרחב הכל">⊕</button>
+        <button class="btn btn-secondary btn-sm" id="btn-cart-collapse-toggle" onclick="toggleCollapseAll('cart')">⊖ כווץ הכל</button>
         <button class="btn btn-success btn-sm" id="btn-share-cart">📤 שתף</button>
         <button class="btn btn-secondary btn-sm" id="btn-save-shopping">💾 שמור</button>
         <button class="btn btn-success btn-sm" id="btn-clear-purchased">✓ נקה שנרכשו</button>
@@ -463,6 +462,8 @@
       <div class="cat-grid" id="profiles-grid"></div>
     </div>
   </div>
+
+  </div><!-- /screens-wrap -->
 
   <!-- BOTTOM NAV -->
   <nav id="bottom-nav">
@@ -841,7 +842,7 @@ async function reorderCategories(){
 // ═══ RENDER ═══
 function p(idx){return PAL[idx%PAL.length];}
 
-function render(){renderManage();renderCart();renderLists();renderProfiles();updateGlobals();}
+function render(){renderManage();renderCart();renderLists();renderProfiles();updateGlobals();updateCollapseBtn('manage');updateCollapseBtn('cart');}
 
 function updateGlobals(){
   const total=items.length,checked=items.filter(i=>i.checked).length;
@@ -1316,20 +1317,36 @@ function onDragEnd(){
 }
 
 // ═══ UI HELPERS ═══
-function collapseAll(screen){
+function toggleCollapseAll(screen){
+  const ids = screen==='manage'
+    ? categories.map(c=>c.id)
+    : categories.filter(c=>items.some(i=>i.category_id===c.id&&i.checked)).map(c=>'cart-'+c.id);
+  const allCollapsed = ids.length>0 && ids.every(id=>collapsedCats.has(id));
+  ids.forEach(id=> allCollapsed ? collapsedCats.delete(id) : collapsedCats.add(id));
+  updateCollapseBtn(screen);
+  render();
+}
+function updateCollapseBtn(screen){
   if(screen==='manage'){
-    categories.forEach(c=>collapsedCats.add(c.id));
+    const ids=categories.map(c=>c.id);
+    const allCollapsed=ids.length>0&&ids.every(id=>collapsedCats.has(id));
+    const btn=document.getElementById('btn-collapse-toggle');
+    if(btn) btn.textContent=allCollapsed?'⊕ הרחב הכל':'⊖ כווץ הכל';
   }else{
-    categories.forEach(c=>collapsedCats.add('cart-'+c.id));
+    const ids=categories.filter(c=>items.some(i=>i.category_id===c.id&&i.checked)).map(c=>'cart-'+c.id);
+    const allCollapsed=ids.length>0&&ids.every(id=>collapsedCats.has(id));
+    const btn=document.getElementById('btn-cart-collapse-toggle');
+    if(btn) btn.textContent=allCollapsed?'⊕ הרחב הכל':'⊖ כווץ הכל';
   }
+}
+function collapseAll(screen){
+  if(screen==='manage') categories.forEach(c=>collapsedCats.add(c.id));
+  else categories.forEach(c=>collapsedCats.add('cart-'+c.id));
   render();
 }
 function expandAll(screen){
-  if(screen==='manage'){
-    categories.forEach(c=>collapsedCats.delete(c.id));
-  }else{
-    categories.forEach(c=>collapsedCats.delete('cart-'+c.id));
-  }
+  if(screen==='manage') categories.forEach(c=>collapsedCats.delete(c.id));
+  else categories.forEach(c=>collapsedCats.delete('cart-'+c.id));
   render();
 }
 function toggleCollapse(id){collapsedCats.has(id)?collapsedCats.delete(id):collapsedCats.add(id);render();}
