@@ -706,9 +706,13 @@ async function saveCatName(id,name){
   syncing(true); await sb.from('categories').update({name}).eq('id',id); syncing(false);
 }
 async function saveCatIcon(id,icon){
-  const cat=categories.find(c=>c.id===id);if(cat)cat.icon=icon;
+  const cat=categories.find(c=>c.id===id);
+  if(cat) cat.icon=icon;
   render();
-  syncing(true); await sb.from('categories').update({icon}).eq('id',id); syncing(false);
+  syncing(true);
+  const {error}=await sb.from('categories').update({icon}).eq('id',id);
+  syncing(false);
+  if(error) showToast('שגיאה בשמירת האייקון: '+error.message);
 }
 async function deleteCategory(id){
   const cat=categories.find(c=>c.id===id);
@@ -1376,6 +1380,16 @@ document.getElementById('btn-share-cart').onclick=()=>openShare('cart');
 document.getElementById('btn-copy-share').onclick=()=>{
   const ta=document.getElementById('share-textarea');
   navigator.clipboard.writeText(ta.value).then(()=>showToast('הועתק! 📋')).catch(()=>{ta.select();document.execCommand('copy');showToast('הועתק! 📋');});
+};
+document.getElementById('btn-icon-save').onclick=()=>{
+  if(iconPickerCatId&&iconPickerSelected){
+    saveCatIcon(iconPickerCatId,iconPickerSelected);
+    showToast('אייקון עודכן ✓');
+  }
+  document.getElementById('icon-picker-overlay').classList.add('hidden');
+};
+document.getElementById('btn-icon-cancel').onclick=()=>{
+  document.getElementById('icon-picker-overlay').classList.add('hidden');
 };
 document.getElementById('btn-close-share').onclick=()=>document.getElementById('share-overlay').classList.add('hidden');
 document.getElementById('btn-uncheck-all').onclick=uncheckAll;
