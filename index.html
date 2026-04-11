@@ -85,6 +85,17 @@
     .check-box.partial{background:var(--primary);border-color:var(--primary);}
     .check-box.partial::after{content:'−';color:#fff;font-size:.82rem;font-weight:900;}
 
+    /* ── SEARCH BAR ── */
+    .search-bar-wrap{padding:10px 16px 6px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:115px;z-index:49;}
+    .search-inner{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:8px 14px;transition:border-color .2s;}
+    .search-inner:focus-within{border-color:var(--primary);background:#fff;}
+    .search-icon{font-size:.95rem;flex-shrink:0;color:var(--light);}
+    .search-inp{flex:1;border:none;background:transparent;font-family:'Heebo',sans-serif;font-size:.9rem;color:var(--text);outline:none;direction:rtl;}
+    .search-inp::placeholder{color:var(--light);}
+    .search-clear{background:transparent;border:none;color:var(--light);font-size:.85rem;cursor:pointer;padding:0 2px;flex-shrink:0;transition:color .15s;}
+    .search-clear:hover{color:var(--danger);}
+    .search-highlight{background:#FFF3A3;border-radius:3px;padding:0 1px;}
+
     /* ── PROGRESS ── */
     .progress-wrap{padding:10px 16px 8px;background:var(--card);border-bottom:1px solid var(--border);}
     .progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
@@ -204,6 +215,11 @@
     /* ── LISTS SCREEN ── */
     .lists-toolbar{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:62px;z-index:50;}
     .lists-toolbar h2{font-size:.95rem;font-weight:800;color:var(--text);flex:1;}
+    /* inner tabs */
+    .inner-tabs{display:flex;gap:0;background:var(--card);border-bottom:1.5px solid var(--border);position:sticky;top:62px;z-index:49;}
+    .inner-tab{flex:1;padding:11px;text-align:center;font-size:.84rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;background:transparent;border-top:none;border-left:none;border-right:none;font-family:'Heebo',sans-serif;}
+    .inner-tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+    .inner-pane{display:none;}.inner-pane.active{display:block;}
     .saved-list-card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--border);box-shadow:var(--s1);padding:16px;display:flex;align-items:center;gap:12px;transition:box-shadow .18s;}
     .saved-list-card:hover{box-shadow:var(--s2);}
     .saved-list-card.is-auto{border-color:#a8d8bc;background:#F0FAF4;}
@@ -212,6 +228,23 @@
     .sl-name{font-size:.95rem;font-weight:800;color:var(--text);}
     .sl-meta{font-size:.76rem;color:var(--muted);margin-top:2px;}
     .sl-actions{display:flex;gap:6px;flex-shrink:0;}
+    /* profiles */
+    .profile-card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--border);box-shadow:var(--s1);padding:16px 18px;display:flex;align-items:center;gap:14px;transition:box-shadow .18s,border-color .18s;cursor:default;}
+    .profile-card:hover{box-shadow:var(--s2);}
+    .profile-card.active-profile{border-color:var(--primary);background:var(--primary-ll);}
+    .prof-icon-wrap{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.1);}
+    .prof-body{flex:1;min-width:0;}
+    .prof-name{font-size:.97rem;font-weight:800;color:var(--text);}
+    .prof-meta{font-size:.75rem;color:var(--muted);margin-top:2px;}
+    .prof-actions{display:flex;gap:6px;flex-shrink:0;}
+    /* profile modal */
+    #profile-overlay{position:fixed;inset:0;background:rgba(8,6,2,.65);display:flex;align-items:center;justify-content:center;z-index:1500;padding:20px;}
+    #profile-overlay.hidden{display:none;}
+    .profile-modal{background:var(--card);border-radius:var(--r);padding:26px;max-width:420px;width:100%;box-shadow:var(--s2);max-height:90svh;overflow-y:auto;}
+    .profile-modal h3{font-size:1rem;font-weight:800;color:var(--primary);margin-bottom:16px;}
+    .prof-inp{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Heebo',sans-serif;font-size:.93rem;color:var(--text);background:var(--bg);outline:none;margin-bottom:12px;transition:border-color .2s;}
+    .prof-inp:focus{border-color:var(--primary);}
+    .prof-section-title{font-size:.8rem;font-weight:700;color:var(--muted);margin-bottom:8px;}
     .empty-lists{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;gap:12px;}
     .empty-lists .el-icon{font-size:3.5rem;}
     .empty-lists .el-title{font-size:1.05rem;font-weight:800;}
@@ -307,6 +340,27 @@
   </div>
 </div>
 
+<!-- PROFILE MODAL -->
+<div id="profile-overlay" class="hidden">
+  <div class="profile-modal">
+    <h3 id="profile-modal-title">➕ פרופיל חדש</h3>
+    <div class="prof-section-title">שם הפרופיל</div>
+    <input class="prof-inp" id="prof-name-inp" placeholder="לדוג׳: סופר שבועי, השלמות..."/>
+    <div class="prof-section-title">אייקון</div>
+    <div class="icon-picker-row" id="prof-icon-row" style="margin-bottom:14px;"></div>
+    <div class="prof-section-title">צבע</div>
+    <div id="prof-color-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;"></div>
+    <div id="prof-items-section">
+      <div class="prof-section-title">פריטים בפרופיל (<span id="prof-item-count">0</span> נבחרו מהסל הנוכחי)</div>
+      <p style="font-size:.78rem;color:var(--muted);margin-bottom:10px;line-height:1.5;">הפרופיל ישמור את הפריטים המסומנים כעת. בטעינת הפרופיל — הפריטים האלו יסומנו אוטומטית.</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-primary btn-sm" id="btn-prof-save" style="flex:1;justify-content:center;">💾 שמור פרופיל</button>
+      <button class="btn btn-secondary btn-sm" id="btn-prof-cancel">ביטול</button>
+    </div>
+  </div>
+</div>
+
 <!-- SAVE LIST MODAL -->
 <div id="save-list-overlay" class="hidden">
   <div class="save-list-box">
@@ -348,6 +402,13 @@
       <button class="btn btn-success btn-sm" id="btn-share-manage">📤 שתף</button>
       <button class="btn btn-secondary btn-sm" id="btn-uncheck-all">☐ נקה</button>
     </div>
+    <div class="search-bar-wrap">
+      <div class="search-inner">
+        <span class="search-icon">🔍</span>
+        <input class="search-inp" id="search-inp" placeholder="חיפוש פריט..." oninput="onSearch(this.value)" />
+        <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
+      </div>
+    </div>
     <div class="progress-wrap">
       <div class="progress-row">
         <span id="prog-text">0 מתוך 0 נבחרו</span>
@@ -377,13 +438,26 @@
     <div class="cat-grid" id="cart-grid"></div>
   </div>
 
-  <!-- SCREEN 3: LISTS -->
+  <!-- SCREEN 3: LISTS & PROFILES -->
   <div id="screen-lists" class="screen">
-    <div class="lists-toolbar">
-      <h2>📚 רשימות שמורות</h2>
-      <button class="btn btn-primary btn-sm" id="btn-new-save">💾 שמור נוכחית</button>
+    <div class="inner-tabs">
+      <button class="inner-tab active" id="itab-lists"    onclick="switchInnerTab('lists')">📚 רשימות שמורות</button>
+      <button class="inner-tab"        id="itab-profiles" onclick="switchInnerTab('profiles')">👤 פרופילים</button>
     </div>
-    <div class="cat-grid" id="lists-grid"></div>
+    <!-- saved lists pane -->
+    <div class="inner-pane active" id="ipane-lists">
+      <div style="display:flex;justify-content:flex-end;padding:10px 16px 0;">
+        <button class="btn btn-primary btn-sm" id="btn-new-save">💾 שמור נוכחית</button>
+      </div>
+      <div class="cat-grid" id="lists-grid"></div>
+    </div>
+    <!-- profiles pane -->
+    <div class="inner-pane" id="ipane-profiles">
+      <div style="display:flex;justify-content:flex-end;padding:10px 16px 0;">
+        <button class="btn btn-primary btn-sm" id="btn-new-profile">➕ פרופיל חדש</button>
+      </div>
+      <div class="cat-grid" id="profiles-grid"></div>
+    </div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -435,12 +509,32 @@ const AVAIL_ICONS=['🥦','🥫','🍿','🧴','🍳','🥤','🍞','🧊','🥩
   '🥗','🥘','🍕','🧆','🫒','🥜','🌾','🍯','🧈','🧂'];
 
 // ═══ STATE ═══
-let sb=null, categories=[], items=[], shoppingLists=[];
+let sb=null, categories=[], items=[], shoppingLists=[], profiles=[];
 let collapsedCats=new Set(), addingItemCat=null, editingItemId=null;
 let editingCatId=null, expandedNotes=new Set(), addingCat=false, confirmCb=null;
 let dragCatSrc=null, dragItemSrc=null;
 let iconPickerCatId=null, iconPickerSelected=null;
 let shareMode='manage', shareTab='all';
+
+let searchQuery='';
+
+function onSearch(val){
+  searchQuery=val.trim();
+  document.getElementById('search-clear').style.display=searchQuery?'':'none';
+  renderManage();
+}
+function clearSearch(){
+  searchQuery='';
+  document.getElementById('search-inp').value='';
+  document.getElementById('search-clear').style.display='none';
+  document.getElementById('search-inp').focus();
+  renderManage();
+}
+function highlightText(text,query){
+  if(!query)return escH(text);
+  const escaped=query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return escH(text).replace(new RegExp(`(${escaped})`,'gi'),'<mark class="search-highlight">$1</mark>');
+}
 
 // ═══ SUPABASE ═══
 async function connect(url,key){
@@ -449,14 +543,16 @@ async function connect(url,key){
   if(error)throw error;
 }
 async function loadData(){
-  const [{data:cats,error:e1},{data:itms,error:e2},{data:lists,error:e3}]=await Promise.all([
+  const [{data:cats,error:e1},{data:itms,error:e2},{data:lists,error:e3},{data:profs,error:e4}]=await Promise.all([
     sb.from('categories').select('*').order('order_idx'),
     sb.from('items').select('*').order('order_idx').order('created_at'),
-    sb.from('shopping_lists').select('*').order('created_at',{ascending:false})
+    sb.from('shopping_lists').select('*').order('created_at',{ascending:false}),
+    sb.from('profiles').select('*').order('created_at')
   ]);
   if(e1)throw e1; if(e2)throw e2;
   categories=cats||[]; items=itms||[];
   shoppingLists=e3?[]:(lists||[]);
+  profiles=e4?[]:(profs||[]);
 }
 async function seedIfEmpty(){
   if(categories.length>0)return;
@@ -490,23 +586,51 @@ async function restoreLastSession(){
   }
 }
 
+// Reset all items to default state (startup + נקה button)
+async function resetAllToDefault(){
+  items.forEach(i=>{i.checked=false;i.purchased=false;i.quantity=null;});
+  render();
+  syncing(true);
+  await sb.from('items').update({checked:false, purchased:false, quantity:null}).gte('created_at','2000-01-01');
+  syncing(false);
+}
+
+let realtimeChannel=null;
 function subscribeRealtime(){
-  sb.channel('rt')
-    .on('postgres_changes',{event:'*',schema:'public',table:'categories'},()=>loadData().then(render))
+  if(realtimeChannel){
+    sb.removeChannel(realtimeChannel);
+    realtimeChannel=null;
+  }
+  realtimeChannel=sb.channel('rt-v2',{config:{broadcast:{self:false}}})
+    .on('postgres_changes',{event:'*',schema:'public',table:'categories'},()=>{
+      loadData().then(render);
+    })
     .on('postgres_changes',{event:'*',schema:'public',table:'items'},p=>{
       const {eventType:t,new:n,old:o}=p;
       if(t==='INSERT'){if(!items.find(i=>i.id===n.id))items.push(n);}
-      else if(t==='UPDATE'){const i=items.findIndex(x=>x.id===n.id);if(i!==-1)items[i]=n;else items.push(n);}
+      else if(t==='UPDATE'){const idx=items.findIndex(x=>x.id===n.id);if(idx!==-1)items[idx]=n;else items.push(n);}
       else if(t==='DELETE'){items=items.filter(i=>i.id!==o.id);}
       render();
     })
     .on('postgres_changes',{event:'*',schema:'public',table:'shopping_lists'},()=>{
-      sb.from('shopping_lists').select('*').order('created_at',{ascending:false}).then(({data})=>{shoppingLists=data||[];renderLists();});
+      sb.from('shopping_lists').select('*').order('created_at',{ascending:false})
+        .then(({data})=>{shoppingLists=data||[];renderLists();});
+    })
+    .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},()=>{
+      sb.from('profiles').select('*').order('created_at')
+        .then(({data})=>{profiles=data||[];renderProfiles();});
     })
     .subscribe(s=>{
       const dot=document.getElementById('conn-dot'),lbl=document.getElementById('conn-label');
-      if(s==='SUBSCRIBED'){dot.className='conn-dot';lbl.textContent='מחובר';}
-      else if(s==='CLOSED'||s==='CHANNEL_ERROR'){dot.className='conn-dot offline';lbl.textContent='מנותק';}
+      if(s==='SUBSCRIBED'){
+        dot.className='conn-dot'; lbl.textContent='מחובר';
+      } else if(s==='CLOSED'||s==='CHANNEL_ERROR'){
+        dot.className='conn-dot offline'; lbl.textContent='מנותק';
+        // Auto-reconnect after 3 seconds
+        setTimeout(()=>{
+          if(sb) subscribeRealtime();
+        },3000);
+      }
     });
 }
 function syncing(v){
@@ -606,9 +730,10 @@ async function selectAllItems(){
   syncing(true); await sb.from('items').update({checked:nv,purchased:false}).gt('order_idx',-9999); syncing(false);
 }
 async function uncheckAll(){
-  items.forEach(i=>{i.checked=false;i.purchased=false;}); render();
-  syncing(true); await sb.from('items').update({checked:false,purchased:false}).eq('checked',true); syncing(false);
-  showToast('כל הסימונים בוטלו');
+  confirmDlg('☐','איפוס רשימה','כל הפריטים יסומנו כלא נבחרים והכמות תחזור ל-1. להמשיך?',async()=>{
+    await resetAllToDefault();
+    showToast('הרשימה אופסה ✓');
+  });
 }
 
 // Auto-save last session, then clear
@@ -708,7 +833,7 @@ async function reorderCategories(){
 // ═══ RENDER ═══
 function p(idx){return PAL[idx%PAL.length];}
 
-function render(){renderManage();renderCart();renderLists();updateGlobals();}
+function render(){renderManage();renderCart();renderLists();renderProfiles();updateGlobals();}
 
 function updateGlobals(){
   const total=items.length,checked=items.filter(i=>i.checked).length;
@@ -727,9 +852,16 @@ function updateGlobals(){
 
 function renderManage(){
   const grid=document.getElementById('manage-grid');
+  const q=searchQuery.toLowerCase();
   let html='';
+  let totalVisible=0;
   categories.forEach((cat,ci)=>{
-    const catItems=items.filter(i=>i.category_id===cat.id).sort((a,b)=>a.order_idx-b.order_idx);
+    let catItems=items.filter(i=>i.category_id===cat.id).sort((a,b)=>a.order_idx-b.order_idx);
+    // filter by search
+    if(q) catItems=catItems.filter(i=>i.name.toLowerCase().includes(q));
+    // hide whole category if searching and nothing matches
+    if(q&&catItems.length===0)return;
+    totalVisible+=catItems.length;
     const done=catItems.filter(i=>i.checked).length;
     const allDone=catItems.length>0&&done===catItems.length;
     const allChk=catItems.length>0&&catItems.every(i=>i.checked);
@@ -789,7 +921,7 @@ function renderManage(){
     </div>`;
   });
 
-  if(addingCat){
+  if(addingCat&&!q){
     const picked=window._newCatIcon||AVAIL_ICONS[0];
     html+=`
     <div class="add-cat-form">
@@ -802,8 +934,16 @@ function renderManage(){
         <button class="btn btn-secondary btn-sm" onclick="addingCat=false;render()">ביטול</button>
       </div>
     </div>`;
-  }else{
+  }else if(!q){
     html+=`<div class="add-cat-tile" onclick="addingCat=true;window._newCatIcon=null;render()"><span style="font-size:1.2rem">+</span> קטגוריה חדשה</div>`;
+  }
+
+  if(q&&totalVisible===0){
+    html=`<div class="empty-cart" style="padding:50px 24px;">
+      <div class="ec-icon">🔍</div>
+      <div class="ec-title">לא נמצאו תוצאות</div>
+      <div class="ec-sub">לא נמצאו פריטים עבור "<strong>${escH(searchQuery)}</strong>"</div>
+    </div>`;
   }
 
   grid.innerHTML=html;
@@ -831,7 +971,7 @@ function renderItemRow(item,pal){
              onkeydown="if(event.key==='Enter')saveItemNameUI('${item.id}');if(event.key==='Escape'){editingItemId=null;render();}"
              onblur="saveItemNameUI('${item.id}')" />`
         :`<div class="item-name ${item.checked?'checked-txt':''}"
-               onclick="editingItemId='${item.id}';render()">${escH(item.name)}</div>`}
+               onclick="editingItemId='${item.id}';render()">${highlightText(item.name,searchQuery)}</div>`}
       ${item.notes&&!noteExpanded?`<div class="item-note-text">📝 ${escH(item.notes)}</div>`:''}
       ${noteExpanded?`<textarea class="note-expand" rows="2" id="note-ta-${item.id}"
            placeholder="הוסף הערה..." onkeydown="if(event.key==='Escape')saveNoteUI('${item.id}')"
@@ -889,6 +1029,112 @@ function renderCart(){
     </div>`;
   });
   grid.innerHTML=html;
+}
+
+// ── Profiles ──
+const PROF_COLORS=['#1C6043','#C4581F','#2B58B0','#9A7810','#6830C8','#167898','#B82E2E','#387820','#A01E6A','#146880'];
+let profModalMode='new', profModalId=null, profIconSel='🛒', profColorSel=PROF_COLORS[0];
+
+function openProfileModal(mode,prof){
+  profModalMode=mode;
+  profModalId=prof?prof.id:null;
+  profIconSel=prof?prof.icon:'🛒';
+  profColorSel=prof?prof.color:PROF_COLORS[0];
+  document.getElementById('profile-modal-title').textContent=mode==='new'?'➕ פרופיל חדש':'✏️ עריכת פרופיל';
+  document.getElementById('prof-name-inp').value=prof?prof.name:'';
+  // icon picker
+  document.getElementById('prof-icon-row').innerHTML=
+    AVAIL_ICONS.map(ic=>`<span class="icon-opt ${ic===profIconSel?'selected':''}" onclick="profIconSel='${ic}';document.querySelectorAll('#prof-icon-row .icon-opt').forEach(e=>e.classList.remove('selected'));this.classList.add('selected')">${ic}</span>`).join('');
+  // color picker
+  document.getElementById('prof-color-row').innerHTML=
+    PROF_COLORS.map(c=>`<div onclick="profColorSel='${c}';document.querySelectorAll('.prof-color-dot').forEach(e=>e.style.outline='none');this.style.outline='3px solid ${c}'" class="prof-color-dot" style="width:28px;height:28px;border-radius:50%;background:${c};cursor:pointer;outline:${c===profColorSel?'3px solid '+c:'none'};outline-offset:2px;transition:outline .15s;"></div>`).join('');
+  // item count
+  const cnt=items.filter(i=>i.checked).length;
+  document.getElementById('prof-item-count').textContent=cnt;
+  document.getElementById('profile-overlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('prof-name-inp').focus(),30);
+}
+
+async function saveProfile(){
+  const name=document.getElementById('prof-name-inp').value.trim();
+  if(!name)return showToast('יש להזין שם לפרופיל');
+  const checkedIds=items.filter(i=>i.checked).map(i=>i.id);
+  if(!checkedIds.length)return showToast('יש לסמן פריטים לפני שמירת פרופיל');
+  const data={name,icon:profIconSel,color:profColorSel,item_ids:checkedIds};
+  try{
+    if(profModalMode==='new'){
+      const {data:r,error}=await sb.from('profiles').insert(data).select().single();
+      if(error)throw error;
+      profiles.push(r);
+    }else{
+      const {error}=await sb.from('profiles').update(data).eq('id',profModalId);
+      if(error)throw error;
+      const idx=profiles.findIndex(p=>p.id===profModalId);
+      if(idx!==-1)profiles[idx]={...profiles[idx],...data};
+    }
+    document.getElementById('profile-overlay').classList.add('hidden');
+    renderProfiles();
+    showToast(profModalMode==='new'?`פרופיל "${name}" נוצר ✓`:`פרופיל "${name}" עודכן ✓`);
+  }catch(e){showToast('שגיאה — הרץ SQL ליצירת טבלת profiles');}
+}
+
+async function loadProfile(prof){
+  const ids=prof.item_ids||[];
+  items.forEach(i=>{i.checked=ids.includes(i.id);if(!ids.includes(i.id))i.purchased=false;});
+  render();
+  syncing(true);
+  await sb.from('items').update({checked:false,purchased:false}).gte('created_at','2000-01-01');
+  if(ids.length) await sb.from('items').update({checked:true}).in('id',ids);
+  syncing(false);
+  showToast(`פרופיל "${prof.name}" נטען — ${ids.length} פריטים`);
+  switchScreen('manage');
+}
+
+async function deleteProfile(id){
+  const prof=profiles.find(p=>p.id===id);
+  confirmDlg('🗑️',`מחיקת פרופיל "${prof?.name}"`,'הפרופיל יימחק לצמיתות.',async()=>{
+    try{
+      await sb.from('profiles').delete().eq('id',id);
+      profiles=profiles.filter(p=>p.id!==id);
+      renderProfiles(); showToast('פרופיל נמחק');
+    }catch(e){showToast('שגיאה במחיקה');}
+  });
+}
+
+function renderProfiles(){
+  const grid=document.getElementById('profiles-grid');
+  if(!grid)return;
+  const checkedIds=new Set(items.filter(i=>i.checked).map(i=>i.id));
+  if(!profiles.length){
+    grid.innerHTML=`<div class="empty-lists"><div class="el-icon">👤</div><div class="el-title">אין פרופילים</div><div class="el-sub">צור פרופיל כדי לטעון<br>קבוצת פריטים שמורה במהירות</div></div>`;
+    return;
+  }
+  let html='';
+  profiles.forEach(prof=>{
+    const cnt=(prof.item_ids||[]).length;
+    const isActive=(prof.item_ids||[]).length>0&&(prof.item_ids||[]).every(id=>checkedIds.has(id));
+    html+=`
+    <div class="profile-card ${isActive?'active-profile':''}">
+      <div class="prof-icon-wrap" style="background:${prof.color}22;">${prof.icon||'🛒'}</div>
+      <div class="prof-body">
+        <div class="prof-name" style="color:${prof.color}">${escH(prof.name)}</div>
+        <div class="prof-meta">${cnt} פריטים${isActive?' · <span style="color:var(--success);font-weight:700;">פעיל ✓</span>':''}</div>
+      </div>
+      <div class="prof-actions">
+        <button class="btn btn-primary btn-xs" onclick="loadProfile(${JSON.stringify(prof).replace(/"/g,'&quot;')})">טען</button>
+        <button class="btn btn-secondary btn-xs" onclick="openProfileModal('edit',${JSON.stringify(prof).replace(/"/g,'&quot;')})">✏️</button>
+        <button class="btn btn-danger btn-xs" onclick="deleteProfile('${prof.id}')">🗑</button>
+      </div>
+    </div>`;
+  });
+  grid.innerHTML=html;
+}
+
+function switchInnerTab(tab){
+  ['lists','profiles'].forEach(t=>{
+    document.getElementById(`itab-${t}`)?.classList.toggle('active',t===tab);
+    document.getElementById(`ipane-${t}`)?.classList.toggle('active',t===tab);
+  });
 }
 
 function renderLists(){
@@ -1137,6 +1383,13 @@ document.getElementById('btn-clear-purchased').onclick=clearPurchased;
 document.getElementById('btn-remove-from-cart').onclick=removeAllFromCart;
 document.getElementById('btn-save-shopping').onclick=openSaveListModal;
 document.getElementById('btn-new-save').onclick=openSaveListModal;
+document.getElementById('btn-new-profile').onclick=()=>openProfileModal('new',null);
+document.getElementById('btn-prof-save').onclick=saveProfile;
+document.getElementById('btn-prof-cancel').onclick=()=>document.getElementById('profile-overlay').classList.add('hidden');
+document.getElementById('prof-name-inp').addEventListener('keydown',e=>{
+  if(e.key==='Enter')saveProfile();
+  if(e.key==='Escape')document.getElementById('profile-overlay').classList.add('hidden');
+});
 document.getElementById('btn-settings').onclick=()=>confirmDlg('🔄','רענון נתונים','לטעון מחדש מהשרת?',()=>loadData().then(render).then(()=>showToast('הנתונים עודכנו ✓')));
 
 // ═══ STARTUP ═══
