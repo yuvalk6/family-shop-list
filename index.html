@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover"/>
   <title>🛒 רשימת קניות</title>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
   <style>
     :root{
       --bg:#F2EDE3;--bg2:#E9E2D6;--card:#FFFEF9;--border:#DDD5C6;
@@ -30,7 +30,7 @@
     @keyframes spin{to{transform:rotate(360deg);}}
 
     /* ── HEADER ── */
-    #app-header{height:62px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1C6043 0%,#28855C 100%);box-shadow:0 2px 20px rgba(28,96,67,.4);flex-shrink:0;}
+    #app-header{height:54px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(135deg,#1C6043 0%,#28855C 100%);box-shadow:0 2px 20px rgba(28,96,67,.4);flex-shrink:0;}
     .h-left{display:flex;align-items:center;gap:10px;}
     .h-logo{font-size:1.45rem;}
     .h-title{font-size:1.15rem;font-weight:900;color:#fff;letter-spacing:-.4px;}
@@ -41,8 +41,9 @@
     .conn-dot.syncing{background:#FFD060;box-shadow:0 0 7px #FFD060;animation:blink .65s infinite;}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
     .conn-label{font-size:.73rem;color:rgba(255,255,255,.82);font-weight:600;}
-    .settings-btn{background:rgba(255,255,255,.14);border:none;border-radius:9px;color:rgba(255,255,255,.88);font-size:1rem;padding:6px 9px;cursor:pointer;transition:background .18s;}
-    .settings-btn:hover{background:rgba(255,255,255,.26);}
+    .sync-btn{background:rgba(255,255,255,.14);border:none;border-radius:9px;color:rgba(255,255,255,.88);font-size:.78rem;padding:5px 10px;cursor:pointer;transition:background .18s;display:flex;align-items:center;gap:5px;font-family:'Heebo',sans-serif;font-weight:700;}
+    .sync-btn:hover{background:rgba(255,255,255,.26);}
+    .sync-btn.syncing{animation:blink .65s infinite;}
 
     /* ── BOTTOM NAV ── */
     #bottom-nav{height:66px;background:var(--card);border-top:1.5px solid var(--border);display:flex;box-shadow:0 -4px 24px rgba(0,0,0,.08);flex-shrink:0;}
@@ -77,7 +78,7 @@
     .btn-lg{padding:13px 24px;font-size:1rem;width:100%;border-radius:var(--r-sm);}
 
     /* ── TOOLBAR ── */
-    .toolbar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:62px;z-index:50;flex-wrap:wrap;}
+    /* old toolbar rule removed - see manage-sticky */
     .check-wrap{display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;}
     .check-box{width:19px;height:19px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all .15s;background:#fff;flex-shrink:0;}
     .check-box:hover{border-color:var(--primary);}
@@ -88,9 +89,9 @@
 
     /* ── SEARCH BAR ── */
     .manage-sticky{position:sticky;top:0;z-index:50;background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.06);}
-    .toolbar{display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--card);border-bottom:1px solid var(--border);}
-    .search-bar-wrap{padding:8px 16px 6px;background:var(--card);border-bottom:1px solid var(--border);}
-    .search-inner{display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:8px 14px;transition:border-color .2s;}
+    .toolbar{display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--card);border-bottom:1px solid var(--border);flex-wrap:nowrap;}
+    .search-bar-wrap{padding:6px 12px;background:var(--card);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+    .search-inner{flex:1;display:flex;align-items:center;gap:8px;background:var(--bg);border:1.5px solid var(--border);border-radius:99px;padding:6px 12px;transition:border-color .2s;}
     .search-inner:focus-within{border-color:var(--primary);background:#fff;}
     .search-icon{font-size:.95rem;flex-shrink:0;color:var(--light);}
     .search-inp{flex:1;border:none;background:transparent;font-family:'Heebo',sans-serif;font-size:.9rem;color:var(--text);outline:none;direction:rtl;}
@@ -100,12 +101,17 @@
     .search-highlight{background:#FFF3A3;border-radius:3px;padding:0 1px;}
 
     /* ── PROGRESS ── */
-    .progress-wrap{padding:10px 16px 8px;background:var(--card);border-bottom:1px solid var(--border);}
-    .progress-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-    .progress-row span{font-size:.8rem;color:var(--muted);}
-    .progress-row strong{font-size:.88rem;color:var(--primary);font-weight:800;}
-    .p-track{height:6px;background:var(--bg2);border-radius:99px;overflow:hidden;}
-    .p-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--primary),var(--success));transition:width .45s cubic-bezier(.4,0,.2,1);}
+    .prog-inline{display:flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;padding:0 2px;}
+    .prog-inline span{font-size:.75rem;color:var(--muted);}
+    .prog-inline strong{font-size:.78rem;color:var(--primary);font-weight:800;}
+    /* ensure zero gap between sticky rows on all devices */
+    .manage-sticky *{margin-top:0!important;margin-bottom:0!important;}
+    .toolbar,.search-bar-wrap{padding-top:7px;padding-bottom:7px;}
+    @media(max-width:600px){
+      .toolbar{padding:6px 10px;gap:5px;}
+      .search-bar-wrap{padding:5px 10px;}
+      .btn-xs{padding:5px 9px;font-size:.76rem;}
+    }
 
     /* ── CAT GRID ── */
     .cat-grid{padding:14px 14px 10px;display:flex;flex-direction:column;gap:13px;}
@@ -216,7 +222,7 @@
     .cart-remove-btn:hover{background:var(--danger-l);color:var(--danger);}
 
     /* ── LISTS SCREEN ── */
-    .lists-toolbar{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:62px;z-index:50;}
+    .lists-toolbar{display:flex;align-items:center;gap:10px;padding:13px 16px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:54px;z-index:50;}
     .lists-toolbar h2{font-size:.95rem;font-weight:800;color:var(--text);flex:1;}
     /* inner tabs */
     .inner-tabs{display:flex;gap:0;background:var(--card);border-bottom:1.5px solid var(--border);position:sticky;top:0;z-index:49;}
@@ -388,7 +394,7 @@
         <div class="conn-dot" id="conn-dot"></div>
         <span class="conn-label" id="conn-label">מחובר</span>
       </div>
-      <button class="settings-btn" id="btn-settings">⚙️</button>
+      <button class="sync-btn" id="btn-settings">🔄 סנכרן</button>
     </div>
   </header>
 
@@ -396,28 +402,25 @@
   <div id="screen-manage" class="screen active">
     <div class="manage-sticky">
       <div class="toolbar">
-        <div class="check-wrap" onclick="selectAllItems()">
+        <div class="check-wrap" onclick="selectAllItems()" style="flex-shrink:0;">
           <div class="check-box" id="global-check-box"></div>
-          <span style="font-size:.82rem;font-weight:700;color:var(--muted);">בחר הכל</span>
+          <span style="font-size:.8rem;font-weight:700;color:var(--muted);">בחר/נקה הכל</span>
         </div>
-        <button class="btn btn-secondary btn-sm" id="btn-collapse-toggle" onclick="toggleCollapseAll('manage')">⊖ כווץ הכל</button>
+        <button class="btn btn-secondary btn-xs" id="btn-collapse-toggle" onclick="toggleCollapseAll('manage')">⊖ כווץ הכל</button>
         <div style="flex:1;"></div>
-        <button class="btn btn-success btn-sm" id="btn-share-manage">📤 שתף</button>
-        <button class="btn btn-secondary btn-sm" id="btn-uncheck-all">☐ נקה</button>
+        <button class="btn btn-success btn-xs" id="btn-share-manage">📤 שתף</button>
+        <button class="btn btn-secondary btn-xs" id="btn-uncheck-all">☐ נקה</button>
       </div>
       <div class="search-bar-wrap">
+        <div class="prog-inline">
+          <span id="prog-text">0 מתוך 0 נבחרו</span>
+          <strong id="prog-pct">0%</strong>
+        </div>
         <div class="search-inner">
           <span class="search-icon">🔍</span>
           <input class="search-inp" id="search-inp" placeholder="חיפוש פריט..." oninput="onSearch(this.value)" />
           <button class="search-clear" id="search-clear" onclick="clearSearch()" style="display:none;">✕</button>
         </div>
-      </div>
-      <div class="progress-wrap">
-        <div class="progress-row">
-          <span id="prog-text">0 מתוך 0 נבחרו</span>
-          <strong id="prog-pct">0%</strong>
-        </div>
-        <div class="p-track"><div class="p-fill" id="prog-fill" style="width:0%"></div></div>
       </div>
     </div>
     <div class="cat-grid" id="manage-grid"></div>
@@ -848,8 +851,10 @@ function updateGlobals(){
   const total=items.length,checked=items.filter(i=>i.checked).length;
   const pct=total?Math.round(checked/total*100):0;
   document.getElementById('prog-text').textContent=`${checked} מתוך ${total} נבחרו`;
-  document.getElementById('prog-pct').textContent=`${pct}%`;
-  document.getElementById('prog-fill').style.width=`${pct}%`;
+  const pctEl=document.getElementById('prog-pct');
+  if(pctEl){pctEl.textContent=`${pct}%`;}
+  const fillEl=document.getElementById('prog-fill');
+  if(fillEl) fillEl.style.width=`${pct}%`;
   const cb=document.getElementById('global-check-box');
   cb.className=checked===0?'check-box':checked===total?'check-box checked':'check-box partial';
   const badge=document.getElementById('cart-badge');
