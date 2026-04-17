@@ -404,7 +404,7 @@
       <div class="toolbar">
         <div class="check-wrap" onclick="selectAllItems()" style="flex-shrink:0;">
           <div class="check-box" id="global-check-box"></div>
-          <span style="font-size:.8rem;font-weight:700;color:var(--muted);">בחר/נקה הכל</span>
+          <span id="select-all-label" style="font-size:.8rem;font-weight:700;color:var(--muted);">בחר הכל</span>
         </div>
         <button class="btn btn-secondary btn-xs" id="btn-collapse-toggle" onclick="toggleCollapseAll('manage')">⊖ כווץ הכל</button>
         <div style="flex:1;"></div>
@@ -857,6 +857,8 @@ function updateGlobals(){
   if(fillEl) fillEl.style.width=`${pct}%`;
   const cb=document.getElementById('global-check-box');
   cb.className=checked===0?'check-box':checked===total?'check-box checked':'check-box partial';
+  const lbl=document.getElementById('select-all-label');
+  if(lbl) lbl.textContent=checked===total&&total>0?'נקה הכל':'בחר הכל';
   const badge=document.getElementById('cart-badge');
   if(checked>0){badge.style.display='';badge.textContent=checked;}else badge.style.display='none';
   const purchased=items.filter(i=>i.purchased).length;
