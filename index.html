@@ -561,7 +561,7 @@ function subscribeRealtime(profileId){
     .on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'profile_id=eq.'+profileId},p=>{
       const {eventType:t,new:n,old:o}=p;
       if(t==='INSERT'){if(!items.find(i=>i.id===n.id))items.push(n);}
-      else if(t==='UPDATE'){const idx=items.findIndex(x=>x.id===n.id);if(idx!==-1)items[idx]=n;else items.push(n);}
+      else if(t==='UPDATE'){const idx=items.findIndex(x=>x.id===n.id);if(idx!==-1)items[idx]={...items[idx],...n,notes:n.notes??items[idx].notes};else items.push(n);}
       else if(t==='DELETE'){items=items.filter(i=>i.id!==o.id);}
       render();
     })
@@ -1022,8 +1022,8 @@ function renderItemRow(item,pal){
                onclick="editingItemId='${item.id}';render()">${highlightText(item.name,searchQuery)}</div>`}
       ${item.notes&&!noteExpanded?`<div class="item-note-text">📝 ${escH(item.notes)}</div>`:''}
       ${noteExpanded?`<textarea class="note-expand" rows="2" id="note-ta-${item.id}"
-           placeholder="הוסף הערה..." onkeydown="if(event.key==='Escape')saveNoteUI('${item.id}')"
-           onblur="saveNoteUI('${item.id}')">${escH(item.notes||'')}</textarea>`:''}
+           placeholder="הוסף הערה..." onkeydown="if(event.key==='Escape')saveNoteUI('${item.id}',this)"
+           onblur="saveNoteUI('${item.id}',this)">${escH(item.notes||'')}</textarea>`:''}
     </div>
     <div class="item-right">
       <select class="qty-select" onchange="updateItemQty('${item.id}',this.value)" onclick="event.stopPropagation()">
@@ -1221,7 +1221,7 @@ function commitAddItem(catId){const i=document.getElementById(`add-inp-${catId}`
 function commitAddCat(){const i=document.getElementById('new-cat-inp');if(i)addCategory(i.value,window._newCatIcon);}
 function saveCatNameUI(id){const i=document.getElementById(`cat-inp-${id}`);if(i&&editingCatId===id)saveCatName(id,i.value);}
 function saveItemNameUI(id){const i=document.getElementById(`item-inp-${id}`);if(i&&editingItemId===id)saveItemName(id,i.value);}
-function saveNoteUI(id){const t=document.getElementById(`note-ta-${id}`);if(t)saveItemNote(id,t.value);}
+function saveNoteUI(id,ta){const t=ta||document.getElementById(`note-ta-${id}`);if(t)saveItemNote(id,t.value);}
 function toggleNote(id){if(expandedNotes.has(id)){saveNoteUI(id);return;}expandedNotes.add(id);render();setTimeout(()=>document.getElementById(`note-ta-${id}`)?.focus(),30);}
 function switchScreen(name){
   ['manage','cart','lists'].forEach(s=>{
