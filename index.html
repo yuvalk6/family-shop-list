@@ -166,7 +166,9 @@
     .item-name:hover{color:var(--primary);}
     .item-name.checked-txt{color:var(--success);font-weight:700;}
     .item-name-input{font-size:.91rem;font-weight:500;color:var(--text);border:none;background:transparent;font-family:'Heebo',sans-serif;width:100%;outline:none;border-bottom:1.5px solid var(--primary);padding-bottom:1px;}
-    .item-note-text{font-size:.76rem;color:var(--muted);margin-top:3px;font-style:italic;}
+    .item-note-text{font-size:.76rem;color:var(--muted);margin-top:3px;font-style:italic;display:flex;align-items:center;gap:5px;}
+    .note-clear-btn{background:none;border:none;cursor:pointer;color:var(--light);font-size:.7rem;padding:0 2px;line-height:1;border-radius:4px;transition:color .14s,background .14s;flex-shrink:0;}
+    .note-clear-btn:hover{color:var(--danger);background:var(--danger-l);}
     .note-expand{margin-top:7px;width:100%;padding:7px 11px;border:1px solid var(--border);border-radius:9px;font-family:'Heebo',sans-serif;font-size:.83rem;color:var(--text);background:var(--bg);outline:none;resize:none;line-height:1.55;transition:border-color .2s;}
     .note-expand:focus{border-color:var(--primary);}
     .item-right{display:flex;align-items:center;gap:5px;flex-shrink:0;padding-top:1px;}
@@ -561,7 +563,7 @@ function subscribeRealtime(profileId){
     .on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'profile_id=eq.'+profileId},p=>{
       const {eventType:t,new:n,old:o}=p;
       if(t==='INSERT'){if(!items.find(i=>i.id===n.id))items.push(n);}
-      else if(t==='UPDATE'){const idx=items.findIndex(x=>x.id===n.id);if(idx!==-1)items[idx]={...items[idx],...n,notes:n.notes??items[idx].notes};else items.push(n);}
+      else if(t==='UPDATE'){const idx=items.findIndex(x=>x.id===n.id);if(idx!==-1)items[idx]={...items[idx],...n,notes:(n.notes!=null?n.notes:items[idx].notes)};else items.push(n);}
       else if(t==='DELETE'){items=items.filter(i=>i.id!==o.id);}
       render();
     })
@@ -738,10 +740,10 @@ async function selectAllItems(){
 }
 async function uncheckAll(){
   confirmDlg('☐','איפוס רשימה','כל הפריטים יסומנו כלא נבחרים והכמות תחזור ל-1.',async()=>{
-    items.forEach(i=>{i.checked=false;i.purchased=false;i.quantity=null;});render();
+    items.forEach(i=>{i.checked=false;i.purchased=false;i.quantity=null;i.notes=null;});expandedNotes.clear();render();
     syncing(true);
     const pid=activeProfile?.id;
-    await sb.from('items').update({checked:false,purchased:false,quantity:null}).eq('profile_id',pid);
+    await sb.from('items').update({checked:false,purchased:false,quantity:null,notes:null}).eq('profile_id',pid);
     syncing(false);showToast('הרשימה אופסה ✓');
   });
 }
@@ -884,7 +886,20 @@ async function deleteProfile(id){
 
 // ═══ RENDER ═══
 function p(idx){return PAL[idx%PAL.length];}
-function render(){renderManage();renderCart();renderLists();updateGlobals();updateCollapseBtn('manage');updateCollapseBtn('cart');}
+function flushNotes(){
+  expandedNotes.forEach(id=>{
+    const ta=document.getElementById('note-ta-'+id);
+    if(ta){
+      const v=ta.value;
+      const item=items.find(i=>i.id===id);
+      if(item && v!==(item.notes||'')){
+        item.notes=v||null;
+        sb.from('items').update({notes:v||null}).eq('id',id);
+      }
+    }
+  });
+}
+function render(){flushNotes();renderManage();renderCart();renderLists();updateGlobals();updateCollapseBtn('manage');updateCollapseBtn('cart');}
 
 function updateGlobals(){
   const total=items.length,checked=items.filter(i=>i.checked).length;
@@ -1020,10 +1035,10 @@ function renderItemRow(item,pal){
              onblur="saveItemNameUI('${item.id}')" />`
         :`<div class="item-name ${item.checked?'checked-txt':''}"
                onclick="editingItemId='${item.id}';render()">${highlightText(item.name,searchQuery)}</div>`}
-      ${item.notes&&!noteExpanded?`<div class="item-note-text">📝 ${escH(item.notes)}</div>`:''}
+      ${item.notes&&!noteExpanded?`<div class="item-note-text">📝 ${escH(item.notes)}<button class="note-clear-btn" onclick="event.stopPropagation();saveItemNote('${item.id}',null)" title="מחק הערה">✕</button></div>`:''}
       ${noteExpanded?`<textarea class="note-expand" rows="2" id="note-ta-${item.id}"
-           placeholder="הוסף הערה..." onkeydown="if(event.key==='Escape')saveNoteUI('${item.id}',this)"
-           onblur="saveNoteUI('${item.id}',this)">${escH(item.notes||'')}</textarea>`:''}
+           placeholder="הוסף הערה..." onkeydown="if(event.key==='Escape')saveNoteUI('${item.id}')"
+           onblur="saveNoteUI('${item.id}')">${escH(item.notes||'')}</textarea>`:''}
     </div>
     <div class="item-right">
       <select class="qty-select" onchange="updateItemQty('${item.id}',this.value)" onclick="event.stopPropagation()">
@@ -1221,7 +1236,7 @@ function commitAddItem(catId){const i=document.getElementById(`add-inp-${catId}`
 function commitAddCat(){const i=document.getElementById('new-cat-inp');if(i)addCategory(i.value,window._newCatIcon);}
 function saveCatNameUI(id){const i=document.getElementById(`cat-inp-${id}`);if(i&&editingCatId===id)saveCatName(id,i.value);}
 function saveItemNameUI(id){const i=document.getElementById(`item-inp-${id}`);if(i&&editingItemId===id)saveItemName(id,i.value);}
-function saveNoteUI(id,ta){const t=ta||document.getElementById(`note-ta-${id}`);if(t)saveItemNote(id,t.value);}
+function saveNoteUI(id){const t=document.getElementById(`note-ta-${id}`);if(t)saveItemNote(id,t.value);}
 function toggleNote(id){if(expandedNotes.has(id)){saveNoteUI(id);return;}expandedNotes.add(id);render();setTimeout(()=>document.getElementById(`note-ta-${id}`)?.focus(),30);}
 function switchScreen(name){
   ['manage','cart','lists'].forEach(s=>{
