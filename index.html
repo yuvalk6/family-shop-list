@@ -539,10 +539,7 @@
       <div class="sp-card" id="sp-table-wrap">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
           <div class="sp-card-title" style="margin-bottom:0;">📋 כל הרשומות</div>
-          <div style="display:flex;gap:8px;">
-            <button class="sp-btn-save" onclick="spSaveList()">💾 שמור רשימה</button>
-            <button class="sp-btn-danger-sm" onclick="spClearEntries()">🗑 נקה</button>
-          </div>
+          <button class="sp-btn-danger-sm" onclick="spClearEntries()">🗑 נקה</button>
         </div>
         <div id="sp-table-container"></div>
       </div>
@@ -602,7 +599,6 @@
 .sp-card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--border);box-shadow:var(--s1);padding:18px 16px;}
 .sp-card-title{font-size:.88rem;font-weight:800;color:#1A3C8C;margin-bottom:14px;letter-spacing:-.1px;}
 .sp-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-@media(max-width:480px){.sp-form-grid{grid-template-columns:1fr;}}
 .sp-field{display:flex;flex-direction:column;gap:4px;}
 .sp-label{font-size:.74rem;font-weight:700;color:var(--muted);}
 .sp-inp{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Heebo',sans-serif;font-size:.88rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;direction:rtl;}
@@ -680,6 +676,9 @@ function openSharedPurchases(){
   if(spActiveListId){
     spEntries=spLoadEntriesFor(spActiveListId);
     spShowActiveContent();
+  } else {
+    // Always open the lists panel on entry so user sees their lists immediately
+    document.getElementById('sp-lists-panel').classList.remove('hidden');
   }
   spSetTodayDate();
 }
