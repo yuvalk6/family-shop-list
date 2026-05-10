@@ -376,6 +376,11 @@
     <button class="ps-add-btn" onclick="openProfileModal('new',null)">
       <span style="font-size:1.3rem">➕</span> פרופיל חדש
     </button>
+    <div style="margin-top:10px;">
+      <button class="ps-add-btn" onclick="openSharedPurchases()" style="border-color:#2B58B0;color:#2B58B0;">
+        <span style="font-size:1.3rem">🤝</span> רשימות קניות משותפות
+      </button>
+    </div>
   </div>
 </div>
 
@@ -460,6 +465,471 @@
     </button>
   </nav>
 </div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SHARED PURCHASES SCREEN  —  completely separate from shopping lists
+     ═══════════════════════════════════════════════════════════ -->
+<div id="shared-purchases-screen" class="sp-screen hidden">
+
+  <!-- Top hero bar -->
+  <div class="sp-hero">
+    <button class="sp-back-btn" onclick="closeSharedPurchases()">◀ חזרה</button>
+    <div style="flex:1;min-width:0;">
+      <div class="sp-hero-title">🤝 רשימות קניות משותפות</div>
+      <div class="sp-hero-sub" id="sp-active-list-label">בחר רשימה או צור חדשה</div>
+    </div>
+    <button class="sp-btn-lists-toggle" onclick="spToggleListsPanel()">📂 רשימות</button>
+  </div>
+
+  <!-- Lists panel (slide-in) -->
+  <div id="sp-lists-panel" class="sp-lists-panel hidden">
+    <div class="sp-lists-panel-header">
+      <span style="font-weight:800;font-size:.93rem;color:#1A3C8C;">📂 הרשימות שלי</span>
+      <button class="sp-icon-btn" onclick="spToggleListsPanel()">✕</button>
+    </div>
+    <div id="sp-lists-panel-body" class="sp-lists-panel-body"></div>
+    <div style="padding:12px;">
+      <button class="sp-btn-add" onclick="spNewListPrompt()">➕ רשימה חדשה</button>
+    </div>
+  </div>
+
+  <div class="sp-body">
+
+    <!-- No active list placeholder -->
+    <div id="sp-no-list-msg" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:60px 24px;text-align:center;">
+      <div style="font-size:3rem;">📋</div>
+      <div style="font-size:1rem;font-weight:800;color:var(--text);">אין רשימה פעילה</div>
+      <div style="font-size:.86rem;color:var(--muted);line-height:1.6;">לחץ על "📂 רשימות" כדי לבחור רשימה<br>או לצור רשימה חדשה</div>
+      <button class="sp-btn-add" style="max-width:220px;" onclick="spNewListPrompt()">➕ צור רשימה חדשה</button>
+    </div>
+
+    <!-- Active list content (hidden until a list is selected) -->
+    <div id="sp-active-content" style="display:none;flex-direction:column;gap:14px;">
+
+      <!-- Add entry form -->
+      <div class="sp-card">
+        <div class="sp-card-title">➕ הוסף רשומה</div>
+        <div class="sp-form-grid">
+          <div class="sp-field">
+            <label class="sp-label">תאריך</label>
+            <input type="date" class="sp-inp" id="sp-date"/>
+          </div>
+          <div class="sp-field">
+            <label class="sp-label">שם הקונה</label>
+            <input type="text" class="sp-inp" id="sp-buyer" placeholder="שם הקונה"/>
+          </div>
+          <div class="sp-field" style="grid-column:1/-1;">
+            <label class="sp-label">מחיר</label>
+            <input type="number" class="sp-inp" id="sp-price" placeholder="0.00" min="0" step="0.01"/>
+          </div>
+          <div class="sp-field" style="grid-column:1/-1;">
+            <label class="sp-label">הערה (אופציונלי)</label>
+            <input type="text" class="sp-inp" id="sp-note" placeholder="הערה קצרה..."/>
+          </div>
+        </div>
+        <button class="sp-btn-add" onclick="spAddEntry()">➕ הוסף לרשימה</button>
+      </div>
+
+      <!-- Filter row -->
+      <div class="sp-filter-row">
+        <input type="text" class="sp-inp sp-filter-inp" id="sp-filter-buyer" placeholder="🔍 סנן לפי קונה..." oninput="spRender()"/>
+      </div>
+
+      <!-- Entries table -->
+      <div class="sp-card" id="sp-table-wrap">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div class="sp-card-title" style="margin-bottom:0;">📋 כל הרשומות</div>
+          <div style="display:flex;gap:8px;">
+            <button class="sp-btn-save" onclick="spSaveList()">💾 שמור רשימה</button>
+            <button class="sp-btn-danger-sm" onclick="spClearEntries()">🗑 נקה</button>
+          </div>
+        </div>
+        <div id="sp-table-container"></div>
+      </div>
+
+      <!-- Summary by buyer -->
+      <div class="sp-card" id="sp-summary-wrap">
+        <div class="sp-card-title">💳 סיכום לפי קונה</div>
+        <div id="sp-summary-container"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Shared Purchases: New List modal -->
+<div id="sp-new-list-overlay" class="sp-modal-overlay hidden">
+  <div class="sp-modal-box">
+    <h3 style="font-size:1rem;font-weight:800;color:#1A3C8C;margin-bottom:14px;">➕ רשימה משותפת חדשה</h3>
+    <label class="sp-label">שם הרשימה</label>
+    <input class="sp-inp" id="sp-new-list-name" placeholder="לדוג׳: חופשה, חתונה, שותפים..." style="margin-top:6px;margin-bottom:14px;"
+      onkeydown="if(event.key==='Enter')spCreateList();if(event.key==='Escape')spCloseNewListModal();"/>
+    <div style="display:flex;gap:8px;">
+      <button class="sp-btn-add" style="flex:1;" onclick="spCreateList()">✓ צור רשימה</button>
+      <button class="sp-btn-secondary" onclick="spCloseNewListModal()">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ═══ SHARED PURCHASES — ISOLATED STYLES (sp- prefix only) ═══ */
+.sp-screen{position:fixed;inset:0;background:var(--bg);z-index:850;display:flex;flex-direction:column;overflow:hidden;direction:rtl;}
+.sp-screen.hidden{display:none;}
+.sp-hero{background:linear-gradient(135deg,#1A3C8C 0%,#2B58B0 100%);padding:40px 16px 18px;color:#fff;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.sp-back-btn{background:rgba(255,255,255,.18);border:none;border-radius:9px;color:#fff;font-size:.82rem;padding:6px 11px;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:700;white-space:nowrap;transition:background .15s;flex-shrink:0;}
+.sp-back-btn:hover{background:rgba(255,255,255,.3);}
+.sp-hero-title{font-size:1.15rem;font-weight:900;letter-spacing:-.3px;margin-bottom:1px;}
+.sp-hero-sub{font-size:.78rem;opacity:.78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sp-btn-lists-toggle{background:rgba(255,255,255,.18);border:none;border-radius:9px;color:#fff;font-size:.82rem;padding:7px 12px;cursor:pointer;font-family:'Heebo',sans-serif;font-weight:700;white-space:nowrap;flex-shrink:0;transition:background .15s;}
+.sp-btn-lists-toggle:hover{background:rgba(255,255,255,.3);}
+
+/* Lists panel */
+.sp-lists-panel{position:absolute;top:0;right:0;bottom:0;width:min(300px,88vw);background:var(--card);z-index:900;box-shadow:-4px 0 30px rgba(0,0,0,.18);display:flex;flex-direction:column;transition:transform .22s;}
+.sp-lists-panel.hidden{display:none;}
+.sp-lists-panel-header{display:flex;align-items:center;justify-content:space-between;padding:44px 16px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.sp-lists-panel-body{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.sp-list-item{background:var(--bg);border-radius:10px;border:1.5px solid var(--border);padding:12px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:10px;}
+.sp-list-item:hover{border-color:#2B58B0;background:#EEF3FF;}
+.sp-list-item.active{border-color:#2B58B0;background:#EEF3FF;}
+.sp-list-item-name{flex:1;font-size:.9rem;font-weight:700;}
+.sp-list-item-count{font-size:.74rem;color:var(--muted);}
+.sp-list-del-btn{background:transparent;border:none;color:var(--light);font-size:.82rem;cursor:pointer;padding:3px 5px;border-radius:6px;transition:all .13s;flex-shrink:0;}
+.sp-list-del-btn:hover{background:var(--danger-l);color:var(--danger);}
+.sp-icon-btn{background:transparent;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:4px 8px;border-radius:7px;transition:all .13s;}
+.sp-icon-btn:hover{background:var(--bg2);}
+
+.sp-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:14px;}
+.sp-card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--border);box-shadow:var(--s1);padding:18px 16px;}
+.sp-card-title{font-size:.88rem;font-weight:800;color:#1A3C8C;margin-bottom:14px;letter-spacing:-.1px;}
+.sp-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+@media(max-width:480px){.sp-form-grid{grid-template-columns:1fr;}}
+.sp-field{display:flex;flex-direction:column;gap:4px;}
+.sp-label{font-size:.74rem;font-weight:700;color:var(--muted);}
+.sp-inp{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Heebo',sans-serif;font-size:.88rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;direction:rtl;}
+.sp-inp:focus{border-color:#2B58B0;}
+.sp-btn-add{width:100%;padding:11px;border:none;border-radius:var(--r-sm);background:linear-gradient(135deg,#1A3C8C,#2B58B0);color:#fff;font-family:'Heebo',sans-serif;font-size:.93rem;font-weight:700;cursor:pointer;transition:opacity .16s;}
+.sp-btn-add:hover{opacity:.88;}
+.sp-btn-secondary{padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--bg2);color:var(--muted);font-family:'Heebo',sans-serif;font-size:.83rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;}
+.sp-btn-secondary:hover{background:var(--border);}
+.sp-btn-danger-sm{padding:6px 12px;border:1.5px solid #f0c0c0;border-radius:8px;background:var(--danger-l);color:var(--danger);font-family:'Heebo',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .14s;}
+.sp-btn-danger-sm:hover{background:#fac8c8;}
+.sp-btn-save{padding:6px 13px;border:1.5px solid #a8d8bc;border-radius:8px;background:var(--primary-ll);color:var(--primary);font-family:'Heebo',sans-serif;font-size:.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .14s;}
+.sp-btn-save:hover{background:#ceeadb;}
+.sp-filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.sp-filter-inp{flex:1;min-width:120px;}
+
+/* Table */
+.sp-table{width:100%;border-collapse:collapse;font-size:.82rem;}
+.sp-table th{text-align:right;padding:8px 10px;background:#EEF3FF;color:#1A3C8C;font-weight:800;border-bottom:2px solid #C5D4F4;white-space:nowrap;}
+.sp-table td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+.sp-table tr:last-child td{border-bottom:none;}
+.sp-table tr:hover td{background:#F5F8FF;}
+.sp-del-btn{background:transparent;border:none;color:var(--light);font-size:.85rem;cursor:pointer;padding:3px 6px;border-radius:6px;transition:all .13s;}
+.sp-del-btn:hover{background:var(--danger-l);color:var(--danger);}
+.sp-price-cell{font-weight:800;color:#1A3C8C;}
+.sp-empty{text-align:center;padding:30px 16px;color:var(--light);font-size:.85rem;}
+
+/* Summary */
+.sp-summary-table{width:100%;border-collapse:collapse;font-size:.88rem;}
+.sp-summary-table th{text-align:right;padding:9px 12px;background:#EEF3FF;color:#1A3C8C;font-weight:800;border-bottom:2px solid #C5D4F4;}
+.sp-summary-table td{padding:10px 12px;border-bottom:1px solid var(--border);}
+.sp-summary-table tr:last-child td{border-bottom:none;}
+.sp-summary-total{background:linear-gradient(135deg,#EEF3FF,#E4EEFF);}
+.sp-summary-total td{border-top:2.5px solid #2B58B0;border-bottom:none;padding:12px;font-weight:900;color:#1A3C8C;font-size:.95rem;}
+.sp-buyer-name{font-weight:700;}
+.sp-buyer-total{font-weight:900;color:#1A3C8C;}
+
+/* Modal */
+.sp-modal-overlay{position:fixed;inset:0;background:rgba(8,6,2,.65);display:flex;align-items:center;justify-content:center;z-index:1600;padding:20px;}
+.sp-modal-overlay.hidden{display:none;}
+.sp-modal-box{background:var(--card);border-radius:var(--r);padding:26px;max-width:380px;width:100%;box-shadow:var(--s2);}
+</style>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   SHARED PURCHASES MODULE — fully isolated from shopping lists.
+   All state prefixed sp*, all functions prefixed sp.
+   Storage: localStorage only (spLists / spEntries keys).
+   ═══════════════════════════════════════════════════════════ */
+
+// ── State ──
+let spLists = [];          // [{id, name, createdAt}]
+let spEntries = [];        // entries for the active list
+let spActiveListId = null;
+
+// ── Persistence helpers ──
+function spSave(){
+  try{localStorage.setItem('sp_lists', JSON.stringify(spLists));}catch(e){}
+  try{localStorage.setItem('sp_entries_'+spActiveListId, JSON.stringify(spEntries));}catch(e){}
+}
+function spLoadAll(){
+  try{spLists=JSON.parse(localStorage.getItem('sp_lists')||'[]');}catch(e){spLists=[];}
+}
+function spLoadEntriesFor(listId){
+  try{return JSON.parse(localStorage.getItem('sp_entries_'+listId)||'[]');}catch(e){return[];}
+}
+function spSaveEntries(listId, entries){
+  try{localStorage.setItem('sp_entries_'+listId, JSON.stringify(entries));}catch(e){}
+}
+
+// ── Open / Close screen ──
+function openSharedPurchases(){
+  spLoadAll();
+  document.getElementById('shared-purchases-screen').classList.remove('hidden');
+  spRenderListsPanel();
+  if(spActiveListId){
+    spEntries=spLoadEntriesFor(spActiveListId);
+    spShowActiveContent();
+  }
+  spSetTodayDate();
+}
+function closeSharedPurchases(){
+  document.getElementById('shared-purchases-screen').classList.add('hidden');
+  document.getElementById('sp-lists-panel').classList.add('hidden');
+}
+
+// ── Date helper ──
+function spSetTodayDate(){
+  const el=document.getElementById('sp-date');
+  if(el && !el.value) el.value=new Date().toISOString().split('T')[0];
+}
+
+// ── Lists panel ──
+function spToggleListsPanel(){
+  document.getElementById('sp-lists-panel').classList.toggle('hidden');
+  if(!document.getElementById('sp-lists-panel').classList.contains('hidden')){
+    spRenderListsPanel();
+  }
+}
+function spRenderListsPanel(){
+  const body=document.getElementById('sp-lists-panel-body');
+  if(!body)return;
+  if(!spLists.length){
+    body.innerHTML='<div class="sp-empty">אין רשימות עדיין</div>';
+    return;
+  }
+  body.innerHTML=spLists.map(l=>{
+    const entries=spLoadEntriesFor(l.id);
+    const isActive=l.id===spActiveListId;
+    const savedLabel=l.lastSaved?`נשמר ${new Date(l.lastSaved).toLocaleDateString('he-IL',{day:'numeric',month:'numeric'})}`:`${entries.length} רשומות`;
+    return `<div class="sp-list-item ${isActive?'active':''}" onclick="spSelectList('${l.id}')">
+      <div style="flex:1;min-width:0;">
+        <div class="sp-list-item-name">${escSP(l.name)}</div>
+        <div class="sp-list-item-count">${savedLabel}</div>
+      </div>
+      <button class="sp-list-del-btn" onclick="event.stopPropagation();spDeleteList('${l.id}')">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function spSelectList(id){
+  spActiveListId=id;
+  spEntries=spLoadEntriesFor(id);
+  document.getElementById('sp-lists-panel').classList.add('hidden');
+  spShowActiveContent();
+  spRender();
+}
+
+function spShowActiveContent(){
+  const list=spLists.find(l=>l.id===spActiveListId);
+  document.getElementById('sp-no-list-msg').style.display='none';
+  const ac=document.getElementById('sp-active-content');
+  ac.style.display='flex';
+  // Clear filters
+  const fb=document.getElementById('sp-filter-buyer');if(fb)fb.value='';
+  // Update hero subtitle
+  document.getElementById('sp-active-list-label').textContent=list?list.name:'';
+  spSetTodayDate();
+  spRender();
+}
+
+function spDeleteList(id){
+  if(!confirm('למחוק את הרשימה ואת כל הרשומות שבה?'))return;
+  spLists=spLists.filter(l=>l.id!==id);
+  try{localStorage.removeItem('sp_entries_'+id);}catch(e){}
+  try{localStorage.setItem('sp_lists',JSON.stringify(spLists));}catch(e){}
+  if(spActiveListId===id){
+    spActiveListId=null;
+    spEntries=[];
+    document.getElementById('sp-active-content').style.display='none';
+    document.getElementById('sp-no-list-msg').style.display='';
+    document.getElementById('sp-active-list-label').textContent='בחר רשימה או צור חדשה';
+  }
+  spRenderListsPanel();
+  spShowToast('רשימה נמחקה');
+}
+
+// ── New list modal ──
+function spNewListPrompt(){
+  document.getElementById('sp-lists-panel').classList.add('hidden');
+  document.getElementById('sp-new-list-name').value='';
+  document.getElementById('sp-new-list-overlay').classList.remove('hidden');
+  setTimeout(()=>document.getElementById('sp-new-list-name').focus(),30);
+}
+function spCloseNewListModal(){
+  document.getElementById('sp-new-list-overlay').classList.add('hidden');
+}
+function spCreateList(){
+  const name=document.getElementById('sp-new-list-name').value.trim();
+  if(!name){spShowToast('יש להזין שם לרשימה');return;}
+  const newList={id:'splist-'+Date.now(),name,createdAt:new Date().toISOString()};
+  spLists.push(newList);
+  try{localStorage.setItem('sp_lists',JSON.stringify(spLists));}catch(e){}
+  spCloseNewListModal();
+  spSelectList(newList.id);
+  spShowToast(`"${name}" נוצרה ✓`);
+}
+
+// ── Add entry ──
+function spAddEntry(){
+  if(!spActiveListId){spShowToast('יש לבחור רשימה קודם');return;}
+  const date=document.getElementById('sp-date').value;
+  const buyer=document.getElementById('sp-buyer').value.trim();
+  const priceRaw=document.getElementById('sp-price').value;
+  const note=document.getElementById('sp-note').value.trim();
+  if(!date){spShowToast('יש לבחור תאריך');return;}
+  if(!buyer){spShowToast('יש להזין שם קונה');return;}
+  const price=parseFloat(priceRaw)||0;
+  if(price<=0){spShowToast('יש להזין מחיר חיובי');return;}
+
+  const entry={id:'spe-'+Date.now(),date,buyer_name:buyer,price,note:note||null,created_at:new Date().toISOString()};
+  spEntries.unshift(entry);
+  spSaveEntries(spActiveListId, spEntries);
+
+  // Reset buyer, price, note — keep date
+  document.getElementById('sp-buyer').value='';
+  document.getElementById('sp-price').value='';
+  document.getElementById('sp-note').value='';
+  spSetTodayDate();
+
+  spShowToast('רשומה נוספה ✓');
+  spRender();
+  spRenderListsPanel();
+}
+
+// ── Delete entry ──
+function spDeleteEntry(id){
+  spEntries=spEntries.filter(e=>e.id!==id);
+  spSaveEntries(spActiveListId, spEntries);
+  spRender();
+  spRenderListsPanel();
+}
+
+// ── Clear entries of active list ──
+function spClearEntries(){
+  if(!spEntries.length)return;
+  if(!confirm('למחוק את כל הרשומות ברשימה הזו?'))return;
+  spEntries=[];
+  spSaveEntries(spActiveListId, spEntries);
+  spRender();
+  spRenderListsPanel();
+}
+
+// ── Save list snapshot ──
+function spSaveList(){
+  if(!spActiveListId){spShowToast('אין רשימה פעילה');return;}
+  if(!spEntries.length){spShowToast('אין רשומות לשמירה');return;}
+  const list=spLists.find(l=>l.id===spActiveListId);
+  const snapshot={
+    id:'spsnap-'+Date.now(),
+    listId:spActiveListId,
+    listName:list?list.name:'רשימה',
+    entries:[...spEntries],
+    savedAt:new Date().toISOString()
+  };
+  let snaps=[];
+  try{snaps=JSON.parse(localStorage.getItem('sp_snapshots')||'[]');}catch(e){}
+  // Keep last 20 snapshots per list
+  snaps=snaps.filter(s=>s.listId===spActiveListId).slice(0,19);
+  snaps.unshift(snapshot);
+  // Also keep snapshots from other lists
+  let allSnaps=[];
+  try{allSnaps=JSON.parse(localStorage.getItem('sp_snapshots')||'[]');}catch(e){}
+  allSnaps=allSnaps.filter(s=>s.listId!==spActiveListId);
+  allSnaps=allSnaps.concat(snaps);
+  try{localStorage.setItem('sp_snapshots',JSON.stringify(allSnaps));}catch(e){}
+  const date=new Date().toLocaleDateString('he-IL',{day:'numeric',month:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  spShowToast(`הרשימה נשמרה ✓ (${date})`);
+  // Update the list's savedAt so the panel shows it
+  const idx=spLists.findIndex(l=>l.id===spActiveListId);
+  if(idx!==-1){spLists[idx].lastSaved=new Date().toISOString();}
+  try{localStorage.setItem('sp_lists',JSON.stringify(spLists));}catch(e){}
+  spRenderListsPanel();
+}
+
+// ── Render entries table + summary ──
+function spRender(){
+  if(!spActiveListId)return;
+  const filterBuyer=(document.getElementById('sp-filter-buyer')?.value||'').trim().toLowerCase();
+
+  const filtered=spEntries.filter(e=>{
+    return !filterBuyer||e.buyer_name.toLowerCase().includes(filterBuyer);
+  });
+
+  // Entries table
+  const tc=document.getElementById('sp-table-container');
+  if(tc){
+    if(!filtered.length){
+      tc.innerHTML='<div class="sp-empty">אין רשומות להצגה</div>';
+    }else{
+      tc.innerHTML=`<div style="overflow-x:auto;"><table class="sp-table">
+        <thead><tr><th>תאריך</th><th>שם הקונה</th><th>מחיר</th><th>הערה</th><th></th></tr></thead>
+        <tbody>${filtered.map(e=>`<tr>
+          <td>${escSP(spFmtDate(e.date))}</td>
+          <td class="sp-buyer-name">${escSP(e.buyer_name)}</td>
+          <td class="sp-price-cell">${Number(e.price).toFixed(2)}</td>
+          <td style="color:var(--muted);font-size:.78rem;">${escSP(e.note||'')}</td>
+          <td><button class="sp-del-btn" onclick="spDeleteEntry('${e.id}')">🗑</button></td>
+        </tr>`).join('')}</tbody>
+      </table></div>`;
+    }
+  }
+
+  // Summary by buyer
+  const sc=document.getElementById('sp-summary-container');
+  if(sc){
+    const buyerMap={};
+    filtered.forEach(e=>{
+      if(!buyerMap[e.buyer_name])buyerMap[e.buyer_name]={total:0,count:0};
+      buyerMap[e.buyer_name].total+=Number(e.price);
+      buyerMap[e.buyer_name].count++;
+    });
+    const buyers=Object.entries(buyerMap).sort((a,b)=>b[1].total-a[1].total);
+    const grandTotal=buyers.reduce((s,[,v])=>s+v.total,0);
+    if(!buyers.length){
+      sc.innerHTML='<div class="sp-empty">אין נתונים לסיכום</div>';
+    }else{
+      sc.innerHTML=`<div style="overflow-x:auto;"><table class="sp-summary-table">
+        <thead><tr><th>שם הקונה</th><th>מספר קניות</th><th>סה״כ שילם</th></tr></thead>
+        <tbody>
+          ${buyers.map(([name,v])=>`<tr>
+            <td class="sp-buyer-name">${escSP(name)}</td>
+            <td style="color:var(--muted);">${v.count}</td>
+            <td class="sp-buyer-total">${v.total.toFixed(2)}</td>
+          </tr>`).join('')}
+          <tr class="sp-summary-total">
+            <td>סה״כ כולל</td>
+            <td>${filtered.length} רשומות</td>
+            <td>${grandTotal.toFixed(2)}</td>
+          </tr>
+        </tbody>
+      </table></div>`;
+    }
+  }
+}
+
+function escSP(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function spFmtDate(d){if(!d)return'';try{const p=d.split('-');if(p.length===3)return`${p[2]}/${p[1]}/${p[0]}`;}catch(e){}return d;}
+
+// ── Toast ──
+let spToastTmr;
+function spShowToast(msg){
+  let el=document.getElementById('sp-toast-el');
+  if(!el){el=document.createElement('div');el.id='sp-toast-el';el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(14px);background:#1A3C8C;color:#fff;padding:11px 22px;border-radius:99px;font-size:.86rem;font-weight:600;opacity:0;transition:all .28s;pointer-events:none;z-index:9100;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,.25);font-family:Heebo,sans-serif;';document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';el.style.transform='translateX(-50%) translateY(0)';
+  clearTimeout(spToastTmr);spToastTmr=setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(-50%) translateY(14px)';},2700);
+}
+</script>
 
 <script>
 const SB_URL='https://dsfkptewggjxkaopdtrb.supabase.co';
