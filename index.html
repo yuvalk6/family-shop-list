@@ -518,11 +518,11 @@
             <label class="sp-label">שם הקונה</label>
             <input type="text" class="sp-inp" id="sp-buyer" placeholder="שם הקונה"/>
           </div>
-          <div class="sp-field" style="grid-column:1/-1;">
+          <div class="sp-field">
             <label class="sp-label">מחיר</label>
             <input type="number" class="sp-inp" id="sp-price" placeholder="0.00" min="0" step="0.01"/>
           </div>
-          <div class="sp-field" style="grid-column:1/-1;">
+          <div class="sp-field">
             <label class="sp-label">הערה (אופציונלי)</label>
             <input type="text" class="sp-inp" id="sp-note" placeholder="הערה קצרה..."/>
           </div>
@@ -598,7 +598,7 @@
 .sp-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;display:flex;flex-direction:column;gap:14px;}
 .sp-card{background:var(--card);border-radius:var(--r);border:1.5px solid var(--border);box-shadow:var(--s1);padding:18px 16px;}
 .sp-card-title{font-size:.88rem;font-weight:800;color:#1A3C8C;margin-bottom:14px;letter-spacing:-.1px;}
-.sp-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.sp-form-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px;}
 .sp-field{display:flex;flex-direction:column;gap:4px;}
 .sp-label{font-size:.74rem;font-weight:700;color:var(--muted);}
 .sp-inp{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-family:'Heebo',sans-serif;font-size:.88rem;color:var(--text);background:var(--bg);outline:none;transition:border-color .2s;direction:rtl;}
