@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,viewport-fit=cover"/>
   <title>🛒 רשימת קניות</title>
   <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.js"></script>
   <style>
     :root{
       --bg:#F2EDE3;--bg2:#E9E2D6;--card:#FFFEF9;--border:#DDD5C6;
@@ -979,13 +978,61 @@ function spShowToast(msg){
 </script>
 
 <script>
-const SB_URL='https://dsfkptewggjxkaopdtrb.supabase.co';
-const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzZmtwdGV3Z2dqeGthb3BkdHJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1OTExNjgsImV4cCI6MjA5MDE2NzE2OH0.9Jj-j9D3DIAmJkH7AkkAoSw3NgRUvPcIT4Tj_MFfJAM';
+// ═══ GOOGLE SHEETS CONFIG ═══
+// כתובת ה-Web App של Google Apps Script (Deploy → Web app → URL שמסתיים ב-/exec)
+const SHEET_API='https://script.google.com/macros/s/AKfycbyCKFIGwiYGEnjWhiz0VjeOrn036cZRyR1cPcKv8BdTjz_cP7CNXDvOlVzMnLy64ReVng/exec';
+const POLL_MS=5000; // כל כמה זמן לבדוק שינויים ממכשירים אחרים
 
-// ⚠️ SQL needed in Supabase:
-// ALTER TABLE categories ADD COLUMN IF NOT EXISTS profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE;
-// ALTER TABLE items ADD COLUMN IF NOT EXISTS profile_id uuid;
-// ALTER TABLE shopping_lists ADD COLUMN IF NOT EXISTS profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE;
+// Minimal Supabase-style client over the Apps Script API.
+// Queries issued in the same tick (e.g. Promise.all) go out as one batched request.
+function createSheetClient(url){
+  let queue=[],timer=null,inFlight=0,writeSeq=0;
+  function flush(){
+    const batch=queue;queue=[];timer=null;inFlight++;
+    fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({ops:batch.map(b=>b.op)})})
+      .then(r=>r.json())
+      .then(res=>{if(!res.ok)throw new Error(res.error||'server error');batch.forEach((b,i)=>b.resolve(res.results[i]));})
+      .catch(err=>batch.forEach(b=>b.resolve({data:null,error:{message:String(err.message||err)}})))
+      .finally(()=>inFlight--);
+  }
+  function send(op){
+    if(op.op!=='select')writeSeq++;
+    return new Promise(resolve=>{queue.push({op,resolve});if(!timer)timer=setTimeout(flush,0);});
+  }
+  function cmp(a,b,orders){
+    for(const [c,asc] of orders){
+      const x=a[c],y=b[c];if(x===y)continue;
+      if(x==null)return 1;if(y==null)return -1;
+      return (x<y?-1:1)*(asc?1:-1);
+    }
+    return 0;
+  }
+  class Query{
+    constructor(t){this.t=t;this.kind='select';this.filters=[];this.orders=[];this.lim=null;this.one=false;this.ret=false;}
+    select(){if(this.kind!=='select')this.ret=true;return this;}
+    insert(v){this.kind='insert';this.rows=Array.isArray(v)?v:[v];return this;}
+    update(v){this.kind='update';this.patch=v;return this;}
+    delete(){this.kind='delete';return this;}
+    eq(c,v){this.filters.push({col:c,op:'eq',val:v});return this;}
+    in(c,v){this.filters.push({col:c,op:'in',val:v});return this;}
+    order(c,o){this.orders.push([c,!(o&&o.ascending===false)]);return this;}
+    limit(n){this.lim=n;return this;}
+    single(){this.one=true;return this;}
+    then(res,rej){if(!this._p)this._p=this._run();return this._p.then(res,rej);}
+    async _run(){
+      const op={op:this.kind,table:this.t,filters:this.filters};
+      if(this.rows)op.rows=this.rows;if(this.patch)op.patch=this.patch;
+      const r=await send(op);
+      if(r.error)return {data:null,error:r.error};
+      let data=r.data||[];
+      if(this.orders.length)data.sort((a,b)=>cmp(a,b,this.orders));
+      if(this.lim!=null)data=data.slice(0,this.lim);
+      if(this.kind!=='select'&&!this.ret)return {data:null,error:null};
+      return {data:this.one?(data[0]||null):data,error:null};
+    }
+  }
+  return {from:t=>new Query(t),get busy(){return inFlight>0||queue.length>0;},get writeSeq(){return writeSeq;}};
+}
 
 const INITIAL_CATS={
   'ירקות ופירות':          {icon:'🥦',items:['ירקות - הכל','פירות - הכל','תפוזים לעוגה','בצל','גזר','סלרי','תפוא','בצל ירוק','כוסברה ופטרוזיליה']},
@@ -1043,9 +1090,9 @@ function onSearch(v){searchQuery=v.trim();document.getElementById('search-clear'
 function clearSearch(){searchQuery='';document.getElementById('search-inp').value='';document.getElementById('search-clear').style.display='none';document.getElementById('search-inp').focus();renderManage();}
 function highlightText(text,q){if(!q)return escH(text);const e=q.replace(/[.*+?^${}()|\[\]\\]/g,'\\$&');return escH(text).replace(new RegExp('('+e+')','gi'),'<mark class="search-highlight">$1</mark>');}
 
-// ═══ SUPABASE ═══
-async function connect(url,key){
-  sb=supabase.createClient(url,key);
+// ═══ DATA (Google Sheets) ═══
+async function connect(url){
+  sb=createSheetClient(url);
   const {error}=await sb.from('profiles').select('id').limit(1);
   if(error)throw error;
 }
@@ -1072,30 +1119,46 @@ async function seedProfileIfEmpty(profileId){
   // New profiles start empty - user builds their own list
 }
 
-let realtimeChannel=null;
+// Polling replaces Supabase realtime: picks up changes made on other devices.
+let pollTimer=null,lastSnap='';
+function uiBusy(){
+  return sb.busy||editingItemId||editingCatId||addingItemCat||addingCat||expandedNotes.size>0
+    ||dragCatSrc||dragItemSrc||touchDragType||document.hidden
+    ||!document.getElementById('confirm-overlay').classList.contains('hidden')
+    ||!document.getElementById('profile-overlay').classList.contains('hidden');
+}
+function setConn(ok){
+  const dot=document.getElementById('conn-dot'),lbl=document.getElementById('conn-label');
+  if(ok){dot.className='conn-dot';lbl.textContent='מחובר';}else{dot.className='conn-dot offline';lbl.textContent='מנותק';}
+}
+async function pollOnce(){
+  if(uiBusy())return;
+  const seq=sb.writeSeq;
+  try{
+    if(activeProfile){
+      const pid=activeProfile.id;
+      const [c,i,l]=await Promise.all([
+        sb.from('categories').select('*').eq('profile_id',pid).order('order_idx'),
+        sb.from('items').select('*').eq('profile_id',pid).order('order_idx').order('created_at'),
+        sb.from('shopping_lists').select('*').eq('profile_id',pid).order('created_at',{ascending:false}),
+      ]);
+      if(c.error||i.error||l.error)throw (c.error||i.error||l.error);
+      if(!activeProfile||activeProfile.id!==pid||sb.writeSeq!==seq||uiBusy())return;
+      const snap=JSON.stringify([c.data,i.data,l.data]);
+      if(snap!==lastSnap){lastSnap=snap;categories=c.data;items=i.data;shoppingLists=l.data;render();}
+      setConn(true);
+    }else{
+      const {data,error}=await sb.from('profiles').select('*').order('created_at');
+      if(error)throw error;
+      if(activeProfile||sb.writeSeq!==seq||uiBusy())return;
+      const snap=JSON.stringify(data);
+      if(snap!==lastSnap){lastSnap=snap;profiles=data;renderProfileSelect();}
+    }
+  }catch(e){setConn(false);}
+}
 function subscribeRealtime(profileId){
-  if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}
-  realtimeChannel=sb.channel('rt-prof-'+profileId,{config:{broadcast:{self:false}}})
-    .on('postgres_changes',{event:'*',schema:'public',table:'categories',filter:'profile_id=eq.'+profileId},()=>loadProfileData(profileId).then(render))
-    .on('postgres_changes',{event:'*',schema:'public',table:'items',filter:'profile_id=eq.'+profileId},p=>{
-      const {eventType:t,new:n,old:o}=p;
-      if(t==='INSERT'){if(!items.find(i=>i.id===n.id))items.push(n);}
-      else if(t==='UPDATE'){const idx=items.findIndex(x=>x.id===n.id);if(idx!==-1)items[idx]={...items[idx],...n,notes:(n.notes!=null?n.notes:items[idx].notes)};else items.push(n);}
-      else if(t==='DELETE'){items=items.filter(i=>i.id!==o.id);}
-      render();
-    })
-    .on('postgres_changes',{event:'*',schema:'public',table:'shopping_lists',filter:'profile_id=eq.'+profileId},()=>{
-      sb.from('shopping_lists').select('*').eq('profile_id',profileId).order('created_at',{ascending:false})
-        .then(({data})=>{shoppingLists=data||[];renderLists();});
-    })
-    .on('postgres_changes',{event:'*',schema:'public',table:'profiles'},()=>{
-      loadProfiles().then(renderProfileSelect);
-    })
-    .subscribe(s=>{
-      const dot=document.getElementById('conn-dot'),lbl=document.getElementById('conn-label');
-      if(s==='SUBSCRIBED'){dot.className='conn-dot';lbl.textContent='מחובר';}
-      else if(s==='CLOSED'||s==='CHANNEL_ERROR'){dot.className='conn-dot offline';lbl.textContent='מנותק';setTimeout(()=>{if(sb&&activeProfile)subscribeRealtime(activeProfile.id);},3000);}
-    });
+  lastSnap='';
+  if(!pollTimer)pollTimer=setInterval(pollOnce,POLL_MS);
 }
 function syncing(v){const dot=document.getElementById('conn-dot'),lbl=document.getElementById('conn-label');if(v){dot.className='conn-dot syncing';lbl.textContent='מסנכרן...';}else{dot.className='conn-dot';lbl.textContent='מחובר';}}
 
@@ -1148,8 +1211,8 @@ async function selectProfile(id){
 }
 
 function goBackToProfiles(){
-  // Save state, unsubscribe, go back
-  if(realtimeChannel){sb.removeChannel(realtimeChannel);realtimeChannel=null;}
+  // Save state, go back
+  lastSnap='';
   activeProfile=null;
   categories=[];items=[];shoppingLists=[];
   collapsedCats.clear();expandedNotes.clear();
@@ -1411,7 +1474,7 @@ function flushNotes(){
       const item=items.find(i=>i.id===id);
       if(item && v!==(item.notes||'')){
         item.notes=v||null;
-        sb.from('items').update({notes:v||null}).eq('id',id);
+        sb.from('items').update({notes:v||null}).eq('id',id).then();
       }
     }
   });
@@ -1802,8 +1865,9 @@ document.getElementById('btn-settings').onclick=()=>confirmDlg('🔄','רענו�
 async function startup(){
   try{
     showLoading(true);
-    await connect(SB_URL,SB_KEY);
+    await connect(SHEET_API);
     await loadProfiles();
+    subscribeRealtime(null);
     showLoading(false);
     // Always show profile select first
     renderProfileSelect();
